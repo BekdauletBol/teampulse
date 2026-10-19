@@ -44,7 +44,7 @@ export default defineConfig({
       env: {
         DATABASE_URL: "sqlite:///./e2e.db",
         FRONTEND_URL: `http://localhost:${FRONTEND_PORT}`,
-        JWT_SECRET: "e2e-only-secret",
+        SECRET_KEY: "e2e-only-secret",
       },
     },
     {

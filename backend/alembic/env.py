@@ -8,7 +8,10 @@ from app.database import Base
 import app.models  # noqa: F401  (registers all models on Base.metadata)
 
 config = context.config
+# Single source of truth: DATABASE_URL from the environment (via app.config), never alembic.ini.
 config.set_main_option("sqlalchemy.url", settings.database_url)
+# Batch mode is only needed for ALTER TABLE on SQLite; it is a no-op elsewhere but keep it explicit.
+RENDER_AS_BATCH = settings.is_sqlite
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -22,7 +25,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch=True,
+        render_as_batch=RENDER_AS_BATCH,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -38,7 +41,7 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            render_as_batch=True,  # needed for ALTER TABLE on SQLite
+            render_as_batch=RENDER_AS_BATCH,
         )
         with context.begin_transaction():
             context.run_migrations()

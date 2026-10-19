@@ -7,7 +7,7 @@ services:
     environment:
       DATABASE_URL: sqlite:////data/teampulse.db
       FRONTEND_URL: http://localhost:5173
-      JWT_SECRET: ${JWT_SECRET:-change-me-for-anything-beyond-a-demo}
+      SECRET_KEY: ${SECRET_KEY:-change-me-for-anything-beyond-a-demo}
       ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
     volumes:
       - teampulse-data:/data

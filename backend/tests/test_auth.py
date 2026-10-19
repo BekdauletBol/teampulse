@@ -21,7 +21,7 @@ def test_register_returns_token(client: TestClient):
     assert r.status_code == 201
     body = r.json()
     assert body["token_type"] == "bearer"
-    payload = jwt.decode(body["access_token"], settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+    payload = jwt.decode(body["access_token"], settings.secret_key, algorithms=[settings.jwt_algorithm])
     assert payload["sub"] == "1"
     assert "exp" in payload
 

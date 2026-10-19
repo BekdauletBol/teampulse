@@ -1,3 +1,4 @@
+import os
 from collections.abc import Generator
 
 import pytest
@@ -10,13 +11,14 @@ import app.models  # noqa: F401  (register tables on Base.metadata)
 from app.database import Base, get_db
 from app.main import app as fastapi_app
 
-# One in-memory SQLite shared across connections via StaticPool, so the app and
-# the test see the same database.
-engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
+# Default: one in-memory SQLite shared across connections via StaticPool, so the app
+# and the test see the same database. Set TEST_DATABASE_URL to run the same suite
+# against Postgres (e.g. before deploying).
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "sqlite://")
+if TEST_DATABASE_URL.startswith("sqlite"):
+    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
+else:
+    engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)
 TestingSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 
