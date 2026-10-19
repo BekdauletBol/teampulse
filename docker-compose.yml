@@ -1,0 +1,31 @@
+# TeamPulse — one command: `docker compose up --build`
+# Frontend: http://localhost:5173   Backend API (direct): http://localhost:8000
+# Demo data: `docker compose run --rm backend python -m scripts.seed_demo`
+services:
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: sqlite:////data/teampulse.db
+      FRONTEND_URL: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET:-change-me-for-anything-beyond-a-demo}
+      ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+    volumes:
+      - teampulse-data:/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status == 200 else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "5173:80"
+
+volumes:
+  teampulse-data:
