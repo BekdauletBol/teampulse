@@ -161,7 +161,7 @@ All settings are environment variables (or a local `backend/.env`, see `.env.exa
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `APP_ENV` | `development` | Anything else (e.g. `production`) makes a missing `SECRET_KEY` a startup error. |
-| `DATABASE_URL` | `sqlite:///./teampulse.db` | `postgres://` and `postgresql://` URLs both work (Render's is normalised). |
+| `DATABASE_URL` | `sqlite:///./teampulse.db` | `postgres://` and `postgresql://` URLs both work; they are normalised to `postgresql+psycopg2://` so the shipped `psycopg2-binary` driver is always used. |
 | `SECRET_KEY` | dev-only value | Signs JWTs. `JWT_SECRET` is accepted as a legacy alias. |
 | `FRONTEND_URL` | `http://localhost:5173` | Used for invite links and allowed as a CORS origin, alongside `http://localhost:5173`. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `1440` | |

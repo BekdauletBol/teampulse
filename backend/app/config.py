@@ -4,13 +4,25 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 DEV_SECRET = "dev-only-insecure-secret-change-me"
 
 
+def normalize_database_url(url: str) -> str:
+    """
+    Render/Heroku hand out postgres://, SQLAlchemy only accepts postgresql://.
+    We also pin the driver: SQLAlchemy 2.1 defaults bare postgresql:// to psycopg (v3),
+    but we ship psycopg2-binary, so make it postgresql+psycopg2:// explicitly.
+    """
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix) :]
+    return url
+
+
 class Settings(BaseSettings):
     """
     All values come from the environment (or a local .env). Render sets DATABASE_URL,
     SECRET_KEY, FRONTEND_URL and APP_ENV; locally the defaults give a SQLite dev setup.
     """
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", populate_by_name=True)
 
     app_name: str = "TeamPulse"
     app_env: str = Field(default="development", validation_alias=AliasChoices("APP_ENV", "ENV"))
@@ -40,10 +52,7 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _normalize_database_url(cls, v: str) -> str:
-        # Render/Heroku hand out postgres://; SQLAlchemy 2 only accepts postgresql://
-        if v.startswith("postgres://"):
-            v = "postgresql://" + v[len("postgres://") :]
-        return v
+        return normalize_database_url(v)
 
     @model_validator(mode="after")
     def _require_secret_outside_dev(self) -> "Settings":

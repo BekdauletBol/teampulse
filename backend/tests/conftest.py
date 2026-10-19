@@ -8,13 +8,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401  (register tables on Base.metadata)
+from app.config import normalize_database_url
 from app.database import Base, get_db
 from app.main import app as fastapi_app
 
 # Default: one in-memory SQLite shared across connections via StaticPool, so the app
 # and the test see the same database. Set TEST_DATABASE_URL to run the same suite
 # against Postgres (e.g. before deploying).
-TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "sqlite://")
+TEST_DATABASE_URL = normalize_database_url(os.environ.get("TEST_DATABASE_URL", "sqlite://"))
 if TEST_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=StaticPool)
 else:
