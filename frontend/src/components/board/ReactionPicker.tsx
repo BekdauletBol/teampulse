@@ -10,13 +10,16 @@ export function ReactionPicker({ open, onPick, mine }: Props) {
   return (
     <AnimatePresence>
       {open && (
+        // Outer div owns the positioning transform; framer-motion animates the inner one.
+        // (motion writes its own `transform`, which would wipe out Tailwind's translate classes.)
+        <div className="absolute bottom-full left-1/2 z-30 mb-1.5 -translate-x-1/2">
         <motion.div
           role="toolbar"
           aria-label="react"
           initial={{ opacity: 0, y: 6, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1, transition: spring }}
           exit={{ opacity: 0, y: 4, scale: 0.96, transition: { duration: 0.12 } }}
-          className="absolute left-1/2 top-0 z-30 flex -translate-x-1/2 -translate-y-[calc(100%+6px)] items-center gap-0.5 rounded-full border border-line bg-surface-2 p-1 shadow-lift"
+          className="flex items-center gap-0.5 rounded-full border border-line bg-surface-2 p-1 shadow-lift"
           onMouseDown={(e) => e.preventDefault()} // keep focus/selection where it was
         >
           {REACTIONS.map((emoji) => (
@@ -38,6 +41,7 @@ export function ReactionPicker({ open, onPick, mine }: Props) {
             </motion.button>
           ))}
         </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

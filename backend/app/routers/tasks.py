@@ -96,6 +96,7 @@ def create_task(team_id: int, payload: TaskCreate, db: DbSession, current_user: 
         title=payload.title.strip(),
         description=payload.description,
         deadline=payload.deadline,
+        color=payload.color,
         assignee_id=payload.assignee_id,
         status=TaskStatus.todo,
         created_by=current_user.id,

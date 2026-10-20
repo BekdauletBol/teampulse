@@ -278,7 +278,7 @@ Next up, in priority order:
 
 Known limitations in Sprint 1:
 
-- Tasks can be created and moved, but not edited or deleted from the UI. The backend supports both (`PATCH` / `DELETE`), the screens are not built.
+- Tasks can be created, edited (✏️ on a card) and moved, but not deleted from the UI. The backend supports `DELETE`; the screen is not built.
 - No way to leave a team, remove a member, or rotate an invite link. Anyone with the link can join.
 - Cards inside a column are ordered by creation time; dragging within a column does not reorder.
 - Touch devices use the status select instead of drag-and-drop (long-press is reserved for reactions).

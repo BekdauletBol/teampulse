@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Task, TaskStatus, TeamMember } from "../../lib/api";
 import { cn } from "../../lib/cn";
+import { colorName, taskColorStyle } from "../../lib/colors";
 import { useMediaQuery } from "../../lib/useMediaQuery";
 import { Avatar, Card, useEmojiBurst } from "../ui";
 import { DeadlineChip } from "./DeadlineChip";
@@ -22,9 +23,10 @@ type Props = {
   busy?: boolean;
   onStatusChange: (status: TaskStatus) => void;
   onReact: (emoji: string) => void;
+  onEdit: () => void;
 };
 
-export function TaskCard({ task, assignee, dragging, busy, onStatusChange, onReact }: Props) {
+export function TaskCard({ task, assignee, dragging, busy, onStatusChange, onReact, onEdit }: Props) {
   const canHover = useMediaQuery("(hover: hover)");
   const [hover, setHover] = useState(false);
   const [pressed, setPressed] = useState(false); // long-press (touch) opened the picker
@@ -81,8 +83,10 @@ export function TaskCard({ task, assignee, dragging, busy, onStatusChange, onRea
       <Card
         hover={!dragging}
         padding="none"
+        style={taskColorStyle(task.color)}
+        data-color={task.color ? colorName(task.color) : undefined}
         className={cn(
-          "p-4",
+          "group p-4",
           dragging && "shadow-lift ring-2 ring-accent/50",
           busy && "opacity-70",
           task.status === "done" && "opacity-90",
@@ -92,6 +96,19 @@ export function TaskCard({ task, assignee, dragging, busy, onStatusChange, onRea
           <h3 className={cn("text-[15px] font-medium leading-snug", task.status === "done" && "line-through decoration-muted/60")}>
             {task.title}
           </h3>
+          <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label={`edit ${task.title}`}
+            title="edit"
+            onClick={onEdit}
+            className={cn(
+              "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm text-muted transition-opacity hover:bg-bubble/60 hover:text-ink",
+              canHover && "opacity-0 focus-visible:opacity-100 group-hover:opacity-100",
+            )}
+          >
+            <span aria-hidden>✏️</span>
+          </button>
           {assignee ? (
             <Avatar name={assignee.name} size="sm" title={assignee.name} />
           ) : (
@@ -103,6 +120,7 @@ export function TaskCard({ task, assignee, dragging, busy, onStatusChange, onRea
               ·
             </span>
           )}
+          </div>
         </div>
         {task.description && <p className="mt-1.5 line-clamp-2 text-sm text-muted">{task.description}</p>}
         <div className="mt-3 flex items-center justify-between gap-2">

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Board } from "../components/board/Board";
 import { AddTaskModal } from "../components/board/AddTaskModal";
+import { ColorFilter, matchesColorFilter, type ColorFilterValue } from "../components/board/ColorFilter";
 import {
   AvatarStack,
   Bubble,
@@ -59,6 +60,8 @@ function TeamPageInner() {
   const [error, setError] = useState<LoadError | null>(null);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editing, setEditing] = useState<Task | null>(null);
+  const [colorFilter, setColorFilter] = useState<ColorFilterValue>("all");
   const [busyIds, setBusyIds] = useState<Set<number>>(new Set());
   const tasksRef = useRef<Task[] | null>(null);
   tasksRef.current = tasks;
@@ -170,10 +173,19 @@ function TeamPageInner() {
     toast.show("added to the board", { emoji: "📌" });
   };
 
+  const onSaved = (task: Task) => {
+    setEditing(null);
+    setTasks((prev) => prev?.map((t) => (t.id === task.id ? task : t)) ?? prev);
+    toast.show("saved", { emoji: "💾" });
+  };
+
   if (error) return <ErrorState error={error} onRetry={load} />;
   if (!team || !tasks || !user) return <BoardSkeleton />;
 
   const openCount = tasks.filter((t) => t.status !== "done").length;
+  // a filter on a colour that no longer exists (e.g. last pink task recoloured) falls back to all
+  const activeFilter = colorFilter !== "all" && !tasks.some((t) => matchesColorFilter(t, colorFilter)) ? "all" : colorFilter;
+  const visibleTasks = tasks.filter((t) => matchesColorFilter(t, activeFilter));
 
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
@@ -218,17 +230,32 @@ function TeamPageInner() {
         {tasks.length === 0 ? (
           <EmptyBoard onAdd={() => setAddOpen(true)} />
         ) : (
-          <Board tasks={tasks} members={team.members} busyIds={busyIds} onStatusChange={changeStatus} onReact={toggleReaction} />
+          <>
+            <ColorFilter tasks={tasks} value={activeFilter} onChange={setColorFilter} />
+            <Board
+              tasks={visibleTasks}
+              members={team.members}
+              busyIds={busyIds}
+              onStatusChange={changeStatus}
+              onReact={toggleReaction}
+              onEdit={setEditing}
+            />
+          </>
         )}
       </div>
 
       <AddTaskModal
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
+        open={addOpen || editing !== null}
+        onClose={() => {
+          setAddOpen(false);
+          setEditing(null);
+        }}
         teamId={team.id}
         members={team.members}
         currentUserId={user.id}
         onCreated={onCreated}
+        editing={editing}
+        onSaved={onSaved}
       />
     </PageTransition>
   );

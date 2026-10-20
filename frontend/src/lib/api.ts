@@ -103,6 +103,7 @@ export type Task = {
   description: string | null;
   deadline: string | null;
   assignee_id: number | null;
+  color: string | null;
   status: TaskStatus;
   created_by: number;
   created_at: string;

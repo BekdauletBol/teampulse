@@ -3,6 +3,7 @@ import { api, ApiError, type Task, type TeamMember } from "../../lib/api";
 import { cn } from "../../lib/cn";
 import { toISODate } from "../../lib/dates";
 import { Avatar, Bubble, Button, EmojiBurst, Input, Modal } from "../ui";
+import { ColorSwatches } from "./ColorSwatches";
 
 type Props = {
   open: boolean;
@@ -11,13 +12,17 @@ type Props = {
   members: TeamMember[];
   currentUserId: number;
   onCreated: (task: Task) => void;
+  /** When set, the modal edits this task (PATCH) instead of creating one. */
+  editing?: Task | null;
+  onSaved?: (task: Task) => void;
 };
 
-export function AddTaskModal({ open, onClose, teamId, members, currentUserId, onCreated }: Props) {
+export function AddTaskModal({ open, onClose, teamId, members, currentUserId, onCreated, editing, onSaved }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [deadline, setDeadline] = useState("");
   const [assignee, setAssignee] = useState<number | null>(null);
+  const [color, setColor] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -25,14 +30,15 @@ export function AddTaskModal({ open, onClose, teamId, members, currentUserId, on
 
   useEffect(() => {
     if (!open) return;
-    setTitle("");
-    setDescription("");
-    setDeadline("");
-    setAssignee(null);
+    setTitle(editing?.title ?? "");
+    setDescription(editing?.description ?? "");
+    setDeadline(editing?.deadline ?? "");
+    setAssignee(editing?.assignee_id ?? null);
+    setColor(editing?.color ?? null);
     setTouched(false);
     setErr(null);
     window.setTimeout(() => titleRef.current?.focus(), 60);
-  }, [open]);
+  }, [open, editing]);
 
   const titleError = !title.trim() ? "what needs doing?" : title.trim().length > 200 ? "a bit shorter, please" : undefined;
 
@@ -42,16 +48,21 @@ export function AddTaskModal({ open, onClose, teamId, members, currentUserId, on
     if (titleError) return;
     setBusy(true);
     setErr(null);
+    const body = {
+      title: title.trim(),
+      description: description.trim() || null,
+      deadline: deadline || null,
+      assignee_id: assignee,
+      color,
+    };
     try {
-      const task = await api.post<Task>(`/teams/${teamId}/tasks`, {
-        title: title.trim(),
-        description: description.trim() || null,
-        deadline: deadline || null,
-        assignee_id: assignee,
-      });
-      onCreated(task);
+      if (editing) {
+        onSaved?.(await api.patch<Task>(`/teams/${teamId}/tasks/${editing.id}`, body));
+      } else {
+        onCreated(await api.post<Task>(`/teams/${teamId}/tasks`, body));
+      }
     } catch (ex) {
-      setErr(ex instanceof ApiError ? ex.detail : "couldn't add that just now");
+      setErr(ex instanceof ApiError ? ex.detail : editing ? "couldn't save that just now" : "couldn't add that just now");
     } finally {
       setBusy(false);
     }
@@ -61,7 +72,7 @@ export function AddTaskModal({ open, onClose, teamId, members, currentUserId, on
   const sorted = [...members].sort((a, b) => (a.role === b.role ? 0 : a.role === "owner" ? -1 : 1));
 
   return (
-    <Modal open={open} onClose={onClose} title="add a task" size="lg">
+    <Modal open={open} onClose={onClose} title={editing ? "edit task" : "add a task"} size="lg">
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <Input
           ref={titleRef}
@@ -115,6 +126,8 @@ export function AddTaskModal({ open, onClose, teamId, members, currentUserId, on
           </div>
         </div>
 
+        <ColorSwatches value={color} onChange={setColor} />
+
         {err && (
           <Bubble tone="error" size="sm" role="alert">
             {err}
@@ -125,9 +138,9 @@ export function AddTaskModal({ open, onClose, teamId, members, currentUserId, on
           <Button type="button" variant="ghost" onClick={onClose}>
             cancel
           </Button>
-          <EmojiBurst emojis={["🚀", "✨", "📌"]} inline>
+          <EmojiBurst emojis={editing ? ["💾", "✨"] : ["🚀", "✨", "📌"]} inline>
             <Button type="submit" loading={busy} className="w-full sm:w-auto">
-              add task
+              {editing ? "save" : "add task"}
             </Button>
           </EmojiBurst>
         </div>

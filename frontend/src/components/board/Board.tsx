@@ -23,6 +23,7 @@ type Props = {
   busyIds: Set<number>;
   onStatusChange: (taskId: number, status: TaskStatus) => void;
   onReact: (taskId: number, emoji: string) => void;
+  onEdit: (task: Task) => void;
 };
 
 const EMPTY_HINT: Record<"normal" | "vibe", Record<TaskStatus, string>> = {
@@ -41,7 +42,7 @@ function dropStyle(style: DraggableStyle | undefined, snapshot: DraggableStateSn
   };
 }
 
-export function Board({ tasks, members, busyIds, onStatusChange, onReact }: Props) {
+export function Board({ tasks, members, busyIds, onStatusChange, onReact, onEdit }: Props) {
   const reduce = useReducedMotion() ?? false;
   const { vibe } = useVibe();
   // On touch screens long-press opens the reaction picker, so dragging is left to the status select.
@@ -112,6 +113,7 @@ export function Board({ tasks, members, busyIds, onStatusChange, onReact }: Prop
                               busy={busyIds.has(task.id)}
                               onStatusChange={(s) => onStatusChange(task.id, s)}
                               onReact={(emoji) => onReact(task.id, emoji)}
+                              onEdit={() => onEdit(task)}
                             />
                           </div>
                         )}

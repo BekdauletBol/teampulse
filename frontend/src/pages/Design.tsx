@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from "react";
+import { ColorSwatches } from "../components/board/ColorSwatches";
 import { DeadlineChip } from "../components/board/DeadlineChip";
+import { TASK_COLORS, taskColorStyle } from "../lib/colors";
 import { StatusSelect } from "../components/board/StatusSelect";
 import { toISODate } from "../lib/dates";
 import { useTheme } from "../lib/theme";
@@ -51,6 +53,7 @@ export default function Design() {
   const [modal, setModal] = useState(false);
   const [val, setVal] = useState("");
   const [status, setStatus] = useState<TaskStatus>("todo");
+  const [swatch, setSwatch] = useState<string | null>(null);
 
   return (
     <PageTransition className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
@@ -213,6 +216,20 @@ export default function Design() {
                 <span className={"inline-flex min-w-[28px] justify-center rounded-full px-2 py-0.5 text-xs font-semibold " + STATUS_META[s].className}>
                   {s === "todo" ? 3 : s === "in_progress" ? 2 : 1}
                 </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      <Section title="task colors" hint="8 palette swatches + none. cards get a 4px left border and a 6% (light) / 8% (dark) tint mixed into the surface.">
+        <div className="flex flex-col gap-5">
+          <ColorSwatches value={swatch} onChange={setSwatch} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {TASK_COLORS.map((c) => (
+              <div key={c.hex} className="rounded-2xl border border-line bg-surface p-4 text-sm shadow-soft" style={taskColorStyle(c.hex)}>
+                <div className="font-medium">{c.name}</div>
+                <div className="font-mono text-xs text-muted">{c.hex}</div>
               </div>
             ))}
           </div>

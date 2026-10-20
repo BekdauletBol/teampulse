@@ -21,6 +21,7 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     deadline: Mapped[date | None] = mapped_column(Date, nullable=True)
+    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     assignee_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )
